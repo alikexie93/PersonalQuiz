@@ -12,7 +12,7 @@ final class ResultViewController: UIViewController {
     @IBOutlet var resultAnimalLabel: UILabel!
     @IBOutlet var resultDefinitionLabel: UILabel!
     
-    var answers = [Answer]()
+    var answers: [Answer]!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -32,22 +32,24 @@ final class ResultViewController: UIViewController {
 private extension ResultViewController {
     func calculateResult() {
         var countOfAnswers: [Animal: Int] = [:]
-        let answerTypes = answers.map{ $0.animal }
+        let answerTypes = answers.map { $0.animal }
         
         for answer in answerTypes {
-            countOfAnswers[answer] = (countOfAnswers[answer] ?? 0) + 1
+            if let animalTypeCount = countOfAnswers[answer] {
+                countOfAnswers.updateValue(animalTypeCount + 1, forKey: answer)
+            } else {
+                countOfAnswers[answer] = 1
+            }
         }
         
-        let countAnswersSorted = countOfAnswers.sorted(
-            by: {
-                (animalOne, animalTwo) -> Bool in
-                    return animalOne.value > animalTwo.value
-            }
-        )
+        let countAnswersSorted = countOfAnswers.sorted { $0.value > $1.value }
+        guard let commonAnswer = countAnswersSorted.first?.key else { return }
         
-        let commonAnswer = countAnswersSorted.first!.key
-        
-        resultAnimalLabel.text = "Вы - \(commonAnswer.rawValue)"
-        resultDefinitionLabel.text = commonAnswer.definition
+        updateUI(with: commonAnswer)
+    }
+    
+    private func updateUI(with animal: Animal) {
+        resultAnimalLabel.text = "Вы - \(animal.rawValue)"
+        resultDefinitionLabel.text = animal.definition
     }
 }
